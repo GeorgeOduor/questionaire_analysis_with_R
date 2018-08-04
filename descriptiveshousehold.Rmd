@@ -1,0 +1,177 @@
+---
+title: "QUESITIONAIRE ANALYSIS WITH R"
+author: "George"
+date: "August 1, 2018"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+```{r}
+
+```
+
+This is a masters student data analysis project(published here with his consent).The data was collected from a questionaire that was designed and distributed among respondents in two geographical areas Kenya Kisumu county.This data was first coded and entered in SPSS language asimilar analysis with SPSS is also available in this repository.
+
+The aim of this project is to illustrate questionaire data analysis with R.The project is not exaustive but for illustratin purposes.
+```{r}
+library(foreign)
+household=read.spss("household.sav",to.data.frame = TRUE,use.value.labels = TRUE)#importing data from local storage
+names(household)
+```
+
+This data contained a total of 35 variables and 422 observations.
+
+#PART A
+#SOCIO DEMOGRAPHICS ANALYSIS
+Socio-demographics data contained seven variables namely geographical location,age,gender,education level,length of stay,No of adults and No of children.Additional variables for age groups and total family size will be calculated for easy descriptives and interpretation.
+
+First we will select these variables from the data set.
+```{r}
+library(dplyr)
+socio_demographics=select(household,1:7)
+#View(socio_demographics) can be used to view the data 
+names(socio_demographics)
+familysize=socio_demographics[,6]+socio_demographics[,7]
+agegroup=cut(socio_demographics$age1, breaks = seq(18,85,by=10), right = TRUE)#creating age groups
+socio_demographicsnew=mutate(socio_demographics,agegroup,familysize)
+tabular=table(socio_demographicsnew[,3],socio_demographicsnew[,4],socio_demographicsnew[,1])
+
+```
+
+#PART B
+1.What was your main source of water before and after DMM?
+
+This question will require variable 8 and 9 in our household dataset.A better way to tackle this question is to select these variables first ,transform the data from wide to long and then draw a barplot.
+```{r}
+watersource=select(household,c(1,8,9))
+library(reshape2)
+watersourcelong=melt(watersource,na.rm = TRUE,id.vars = "Location",#id variables to keep
+                     measure.vars = c("watersrceBDMM","watersrcADMM"),
+                     variable.name = "Period",
+                     value.name = "Source")
+library(ggplot2)
+ggplot(data=watersourcelong,mapping = aes(x=Period,y=,fill=Source))+
+        geom_bar(position = "dodge")+
+        facet_wrap(~Location,ncol = 2)+
+     labs(x="Period Before and  After DMM",y="Frequency",title="MAIN SOURCE OF WATER \n BEFORE AND AFTER DMM")+
+  theme(
+        plot.title = element_text(size = 12,hjust = .5),
+        axis.text.x = element_text(angle = 45,vjust = .5)
+        )
+```
+
+2.7a). How much do you pay for water
+
+ I- Before DMM_____________________________Ksh
+ 
+II. After DMM?_______________________________Ksh
+
+To answer this question we need to split it into two variables in order to capture data before and after the DMM intervention.This data will be further converted to its long formart for quick visualization.
+
+```{r}
+watercost=select(household,Location,costwaterBDMM,costwaterADMM)
+watercostlong=melt(watercost,id.vars = "Location",variable.name = "Period",value.name = "Cost")
+descript <- function(x) {
+
+  m=mean(x)
+  r=range(x)
+  max=max(x)
+  min=min(x)
+  s=sd(x)
+  return(c(mean=m,range=r,Maximum=max,Minimum=min,stdev=s))
+}
+desc=round(as.data.frame(sapply(watercost[,2:3], descript)),2)
+desc
+ggplot(watercostlong,mapping = aes(x=Location,y=Cost,fill=Period) )+geom_col(position = "dodge")+labs(x="GEOGRAPHICAL AREA",y="Average Cost of Water(Ksh)",title="AVERAGE COST OF WATER BEFORE AND AFTER DMM")
+
+```
+
+question 8:How much water do use per day
+
+I- Before DMM___________________________Ltrs
+
+II. After DMM_____________________________Ltrs
+
+```{r}
+wateruse=select(household,Location,waterusageBDMM,waterusageADMM)
+desc2=round(as.data.frame(sapply(wateruse[,2:3], descript)),2)
+desc2
+wateruselong=melt(wateruse,id.vars = "Location",variable.name = "Period",value.name = "Amount_Used")
+ggplot(wateruselong,mapping = aes(x=factor(Location),fill=Period))+geom_bar(position = "dodge")
+
+  
+```
+
+
+#Water supply
+9. How often did you experience interruptions of Water Supply?
+
+I- Before DMM?
+
+II. After DMM?
+
+```{r}
+interuption=select(household,Location,interuptionBDMM,interuptionADMM)
+interuptionlong=melt(interuption,id.vars = "Location",value.name = "Value",variable.name = "Period")
+ggplot(interuptionlong,mapping = aes(x=factor(Value),fill=Period))+geom_bar(position = "dodge")+facet_wrap(~Location)+labs(x="Water interuptions")+ theme(
+        plot.title = element_text(size = 12,hjust = .5),
+        axis.text.x = element_text(angle = 45,vjust = .5)
+        )
+round(prop.table(ftable( table(interuptionlong)))*100,2)
+
+```
+
+
+How many days in a week do you receive water 
+
+ 	 I- Before DMM?
+ 	 
+II. After DMM?
+
+```{r}
+days=select(household,Location,supplyBDMM,supplyADMM)
+dayslong=melt(days,id.vars ="Location",na.rm = TRUE,value.name = "Value",variable.name = "Period")
+round(sapply(days[,2:3], descript),2)
+ggplot(dayslong,mapping = aes(x=Location,y=Value,fill=Period))+geom_col(position = "dodge")
+```
+
+
+11.What distance did you have to travel to fetch water? 
+        I]- Before DMM?
+       II]. After DMM?
+
+
+```{r}
+distance=select(household,Location,distcovBDMM,distcovADMM)
+distlong=melt(distance,id.vars = "Location",variable.name = "Period",value.name = "DistanceCovered")
+View(distlong)
+round(sapply(distance[,2:3], descript))
+ggplot(distlong,mapping = aes(x=Location,y=DistanceCovered,fill=Period))+geom_col(position = "dodge")+labs(x="Point of Collection",y="Distance Covered",title="Distance Covered Before and After DMM")+theme()
+```
+
+ 12. How long do you wait at the Water collection point to collect water
+       I]- Before DMM?_______________________________
+      II]. After DMM?_____________________________________
+
+```{r}
+waitingtime=select(household,Location,waitingtimeBDMM,waitingtimeADMM)
+waitingtimeLONG=melt(waitingtime,id.vars = "Location",variable.name = "Period",value.name = "Time")
+round(sapply(waitingtime[,2:3], descript))
+ggplot(waitingtimeLONG,mapping = aes(x=Location,y=Time,fill=Period))+geom_col(position = "dodge")+labs(title="Waiting time at collection point")+theme_classic()
+```
+
+
+
+
+
+
+
+
+
