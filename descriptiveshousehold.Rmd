@@ -1,5 +1,5 @@
 ---
-title: "QUESITIONAIRE ANALYSIS WITH R"
+title: "QUESTIONAIRE ANALYSIS WITH R"
 author: "George"
 date: "August 1, 2018"
 output:
@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
-This is a masters student data analysis project(published here with his consent).The data was collected from a questionaire that was designed and distributed among respondents in two geographical areas Kenya Kisumu county.This data was first coded and entered in SPSS language asimilar analysis with SPSS is also available in this repository.
+This is a masters student data analysis project(published here with his consent).The data was collected from a questionaire that was designed and distributed among respondents in two geographical areas Kenya Kisumu county.This data was first coded and entered in SPSS so it doest include data coding in R.Language asimilar analysis with SPSS is also available in this repository.
 
 The aim of this project is to illustrate questionaire data analysis with R.The project is not exaustive but for illustratin purposes.
 ```{r}
